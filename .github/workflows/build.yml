@@ -19,8 +19,11 @@ jobs:
     container:
       image: golang:${{ matrix.go }}
 
+    env:
+      CODECOV_TOKEN: 3eeeefa5-b0da-4db9-9c10-2919dc3f9f92 # for codecov
     steps:
     - uses: actions/checkout@v2
     - name: Run tests
       run: |  # -race wouldn't be supported without gcc
-        go test -v -race $(go list ./... | grep -v /vendor/) -coverprofile=coverage.txt
+        go test -v -race $(go list ./... | grep -v /vendor/) -coverprofile=coverage.txt &&
+        bash <(curl -s https://codecov.io/bash)
