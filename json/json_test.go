@@ -9,23 +9,25 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
-	"github.com/gorilla/rpc"
+	"github.com/sammyne/rpc"
 )
 
-var ErrResponseError = errors.New("response error")
+var (
+	ErrResponseError     = errors.New("response error")
+	ErrResponseJsonError = &Error{Data: map[string]interface{}{
+		"stackstrace": map[string]interface{}{"0": "foo()"},
+		"error":       "a message",
+	}}
+)
 
 type Service1Request struct {
 	A int
 	B int
-}
-
-type Service1BadRequest struct {
-	M string `json:"method"`
 }
 
 type Service1Response struct {
@@ -33,7 +35,6 @@ type Service1Response struct {
 }
 
 type Service1 struct {
-	beforeAfterContext map[string]string
 }
 
 func (t *Service1) Multiply(r *http.Request, req *Service1Request, res *Service1Response) error {
@@ -45,12 +46,8 @@ func (t *Service1) ResponseError(r *http.Request, req *Service1Request, res *Ser
 	return ErrResponseError
 }
 
-func (t *Service1) BeforeAfter(r *http.Request, req *Service1Request, res *Service1Response) error {
-	if _, ok := t.beforeAfterContext["before"]; !ok {
-		return fmt.Errorf("before value not found in context")
-	}
-	res.Result = 1
-	return nil
+func (t *Service1) ResponseJsonError(r *http.Request, req *Service1Request, res *Service1Response) error {
+	return ErrResponseJsonError
 }
 
 func execute(t *testing.T, s *rpc.Server, method string, req, res interface{}) error {
@@ -69,15 +66,23 @@ func execute(t *testing.T, s *rpc.Server, method string, req, res interface{}) e
 	return DecodeClientResponse(w.Body, res)
 }
 
-func executeRaw(t *testing.T, s *rpc.Server, req interface{}, res interface{}) int {
-	j, _ := json.Marshal(req)
-	r, _ := http.NewRequest("POST", "http://localhost:8080/", bytes.NewBuffer(j))
+func executeRaw(t *testing.T, s *rpc.Server, req json.RawMessage) (int, *bytes.Buffer) {
+	r, _ := http.NewRequest("POST", "http://localhost:8080/", bytes.NewBuffer(req))
 	r.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, r)
 
-	return w.Code
+	return w.Code, w.Body
+}
+
+func field(name string, blob json.RawMessage) (v interface{}, ok bool) {
+	var obj map[string]interface{}
+	if err := json.Unmarshal(blob, &obj); err != nil {
+		return nil, false
+	}
+	v, ok = obj[name]
+	return
 }
 
 func TestService(t *testing.T) {
@@ -87,47 +92,41 @@ func TestService(t *testing.T) {
 
 	var res Service1Response
 	if err := execute(t, s, "Service1.Multiply", &Service1Request{4, 2}, &res); err != nil {
-		t.Error("Expected err to be nil, but got:", err)
+		t.Error("Expected err to be nil, but got", err)
 	}
 	if res.Result != 8 {
-		t.Errorf("Wrong response: %v.", res.Result)
+		t.Error("Expected res.Result to be 8, but got", res.Result)
 	}
-
 	if err := execute(t, s, "Service1.ResponseError", &Service1Request{4, 2}, &res); err == nil {
 		t.Errorf("Expected to get %q, but got nil", ErrResponseError)
 	} else if err.Error() != ErrResponseError.Error() {
 		t.Errorf("Expected to get %q, but got %q", ErrResponseError, err)
 	}
-
-	if code := executeRaw(t, s, &Service1BadRequest{"Service1.Multiply"}, &res); code != 400 {
-		t.Errorf("Expected http response code 400, but got %v", code)
+	if code, res := executeRaw(t, s, json.RawMessage(`{"method":"Service1.Multiply","params":null,"id":5}`)); code != 400 {
+		t.Error("Expected response code to be 400, but got", code)
+	} else if v, ok := field("result", res.Bytes()); !ok || v != nil {
+		t.Errorf("Expected ok to be true and v to be nil, but got %v and %v", ok, v)
+	}
+	if err := execute(t, s, "Service1.ResponseJsonError", &Service1Request{4, 2}, &res); err == nil {
+		t.Errorf("Expected to get %q, but got nil", ErrResponseError)
+	} else if jsonErr, ok := err.(*Error); !ok {
+		t.Error("Expected err to be of a *json.Error type")
+	} else if !reflect.DeepEqual(jsonErr.Data, ErrResponseJsonError.Data) {
+		t.Errorf("Expected jsonErr to be %q, but got %q", ErrResponseJsonError, jsonErr)
 	}
 }
 
-func TestServiceBeforeAfter(t *testing.T) {
-	s := rpc.NewServer()
-	s.RegisterCodec(NewCodec(), "application/json")
-	service := &Service1{}
-	service.beforeAfterContext = map[string]string{}
-	s.RegisterService(service, "")
+func TestClientNullResult(t *testing.T) {
+	data := `{"jsonrpc": "2.0", "id": 8674665223082153551, "result": null}`
+	reader := bytes.NewReader([]byte(data))
 
-	s.RegisterBeforeFunc(func(i *rpc.RequestInfo) {
-		service.beforeAfterContext["before"] = "Before is true"
-	})
-	s.RegisterAfterFunc(func(i *rpc.RequestInfo) {
-		service.beforeAfterContext["after"] = "After is true"
-	})
+	var reply interface{}
 
-	var res Service1Response
-	if err := execute(t, s, "Service1.BeforeAfter", &Service1Request{}, &res); err != nil {
-		t.Error("Expected err to be nil, but got:", err)
+	err := DecodeClientResponse(reader, &reply)
+	if err == nil {
+		t.Fatal(err)
 	}
-
-	if res.Result != 1 {
-		t.Errorf("Expected Result = 1, got %d", res.Result)
-	}
-
-	if afterValue, ok := service.beforeAfterContext["after"]; !ok || afterValue != "After is true" {
-		t.Errorf("Expected after in context to be 'After is true', got %s", afterValue)
+	if err.Error() != "Unexpected null result" {
+		t.Fatalf("Unexpected error: %s", err)
 	}
 }

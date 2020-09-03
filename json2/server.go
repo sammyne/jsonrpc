@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/rpc/v2"
+	"github.com/sammyne/rpc"
 )
 
 var null = json.RawMessage([]byte("null"))

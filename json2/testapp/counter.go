@@ -10,8 +10,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/rpc/v2"
-	"github.com/gorilla/rpc/v2/json2"
+	"github.com/sammyne/rpc"
+	"github.com/sammyne/rpc/json2"
 )
 
 type Counter struct {
