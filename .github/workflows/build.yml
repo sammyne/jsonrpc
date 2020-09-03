@@ -27,3 +27,4 @@ jobs:
       run: |  # -race wouldn't be supported without gcc
         go test -v -race $(go list ./... | grep -v /vendor/) -coverprofile=coverage.txt &&
         bash <(curl -s https://codecov.io/bash)
+      shell: bash
