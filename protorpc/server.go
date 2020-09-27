@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"strings"
 
-	rpc "github.com/sammyne/jsonrpc"
+	"github.com/sammyne/jsonrpc"
 )
 
 var null = json.RawMessage([]byte("null"))
@@ -59,7 +59,7 @@ type Codec struct {
 }
 
 // NewRequest returns a CodecRequest.
-func (c *Codec) NewRequest(r *http.Request) rpc.CodecRequest {
+func (c *Codec) NewRequest(r *http.Request) jsonrpc.CodecRequest {
 	return newCodecRequest(r)
 }
 
@@ -68,7 +68,7 @@ func (c *Codec) NewRequest(r *http.Request) rpc.CodecRequest {
 // ----------------------------------------------------------------------------
 
 // newCodecRequest returns a new CodecRequest.
-func newCodecRequest(r *http.Request) rpc.CodecRequest {
+func newCodecRequest(r *http.Request) jsonrpc.CodecRequest {
 	// Decode the request body and check if RPC method is valid.
 	req := new(serverRequest)
 	path := r.URL.Path
@@ -137,7 +137,7 @@ func (c *CodecRequest) WriteError(w http.ResponseWriter, status int, err error) 
 func (c *CodecRequest) writeServerResponse(w http.ResponseWriter, status int, res *serverResponse) {
 	b, err := json.Marshal(res.Result)
 	if err != nil {
-		rpc.WriteError(w, 400, err.Error())
+		jsonrpc.WriteError(w, 400, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

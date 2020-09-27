@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package gorilla/rpc/protorpc provides a codec for ProtoRPC over HTTP services.
+Package jsonrpc/protorpc provides a codec for ProtoRPC over HTTP services.
 
 To register the codec in a RPC server:
 
@@ -41,7 +41,7 @@ Response:
   "responseField2": "value2",
 }
 
-Check the gorilla/rpc documentation for more details:
+Check the jsonrpc documentation for more details:
 
 	http://gorilla-web.appspot.com/pkg/rpc
 */

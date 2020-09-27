@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package gorilla/rpc/json provides a codec for JSON-RPC over HTTP services.
+Package jsonrpc/json provides a codec for JSON-RPC over HTTP services.
 
 To register the codec in a RPC server:
 
@@ -51,7 +51,7 @@ Response format is:
 	id:
 		The same id as the request it is responding to.
 
-Check the gorilla/rpc documentation for more details:
+Check the jsonrpc documentation for more details:
 
 	http://gorilla-web.appspot.com/pkg/rpc
 */
