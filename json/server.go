@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sammyne/rpc"
+	rpc "github.com/sammyne/jsonrpc"
 )
 
 var null = json.RawMessage([]byte("null"))

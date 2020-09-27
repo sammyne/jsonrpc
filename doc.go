@@ -20,8 +20,8 @@ Let's setup a server and register a codec and service:
 
 	import (
 		"http"
-		"github.com/sammyne/rpc"
-		"github.com/sammyne/rpc/json"
+		"github.com/sammyne/jsonrpc"
+		"github.com/sammyne/jsonrpc/json"
 	)
 
 	func init() {
@@ -78,4 +78,4 @@ Gorilla has packages with common RPC codecs. Check out their documentation:
 
 	JSON: http://gorilla-web.appspot.com/pkg/rpc/json
 */
-package rpc
+package jsonrpc

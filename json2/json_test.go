@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sammyne/rpc"
+	"github.com/sammyne/jsonrpc"
 )
 
 // ResponseRecorder is an implementation of http.ResponseWriter that
@@ -115,7 +115,7 @@ func (t *Service1) MappedResponseError(r *http.Request, req *Service1Request, re
 	return ErrMappedResponseError
 }
 
-func execute(t *testing.T, s *rpc.Server, method string, req, res interface{}) error {
+func execute(t *testing.T, s *jsonrpc.Server, method string, req, res interface{}) error {
 	if !s.HasMethod(method) {
 		t.Fatal("Expected to be registered:", method)
 	}
@@ -131,7 +131,7 @@ func execute(t *testing.T, s *rpc.Server, method string, req, res interface{}) e
 	return DecodeClientResponse(w.Body, res)
 }
 
-func executeRaw(t *testing.T, s *rpc.Server, req interface{}, res interface{}) error {
+func executeRaw(t *testing.T, s *jsonrpc.Server, req interface{}, res interface{}) error {
 	j, _ := json.Marshal(req)
 	r, _ := http.NewRequest("POST", "http://localhost:8080/", bytes.NewBuffer(j))
 	r.Header.Set("Content-Type", "application/json")
@@ -142,7 +142,7 @@ func executeRaw(t *testing.T, s *rpc.Server, req interface{}, res interface{}) e
 	return DecodeClientResponse(w.Body, res)
 }
 
-func executeInvalidJSON(t *testing.T, s *rpc.Server, res interface{}) error {
+func executeInvalidJSON(t *testing.T, s *jsonrpc.Server, res interface{}) error {
 	r, _ := http.NewRequest("POST", "http://localhost:8080/", strings.NewReader(`not even a json`))
 	r.Header.Set("Content-Type", "application/json")
 
@@ -153,7 +153,7 @@ func executeInvalidJSON(t *testing.T, s *rpc.Server, res interface{}) error {
 }
 
 func TestService(t *testing.T) {
-	s := rpc.NewServer()
+	s := jsonrpc.NewServer()
 	s.RegisterCodec(NewCodec(), "application/json")
 	s.RegisterService(new(Service1), "")
 
@@ -227,8 +227,8 @@ func TestServiceWithErrorMapper(t *testing.T) {
 		}
 	}
 
-	s := rpc.NewServer()
-	s.RegisterCodec(NewCustomCodecWithErrorMapper(rpc.DefaultEncoderSelector, errorMapper), "application/json")
+	s := jsonrpc.NewServer()
+	s.RegisterCodec(NewCustomCodecWithErrorMapper(jsonrpc.DefaultEncoderSelector, errorMapper), "application/json")
 	s.RegisterService(new(Service1), "")
 
 	var res Service1Response

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sammyne/rpc"
+	"github.com/sammyne/jsonrpc"
 )
 
 const jsonContentType = "application/json; charset=utf-8"
@@ -46,7 +46,7 @@ func (t *Service1) ResponseError(r *http.Request, req *Service1Request, res *Ser
 	return ErrResponseError
 }
 
-func execute(t *testing.T, s *rpc.Server, method string, req, res interface{}) (*httptest.ResponseRecorder, error) {
+func execute(t *testing.T, s *jsonrpc.Server, method string, req, res interface{}) (*httptest.ResponseRecorder, error) {
 	if !s.HasMethod(method) {
 		t.Fatal("Expected to be registered:", method)
 	}
@@ -64,7 +64,7 @@ func execute(t *testing.T, s *rpc.Server, method string, req, res interface{}) (
 }
 
 func TestService(t *testing.T) {
-	s := rpc.NewServer()
+	s := jsonrpc.NewServer()
 	s.RegisterCodec(NewCodec(), "application/json")
 	s.RegisterService(new(Service1), "")
 
