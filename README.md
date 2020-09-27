@@ -3,6 +3,7 @@
 This is a fork of [gorilla/rpc].
 
 ![build](https://github.com/sammyne/jsonrpc/workflows/build/badge.svg)
+![minimum go](https://img.shields.io/badge/go-1.15%2B-blue)
 [![codecov](https://codecov.io/gh/sammyne/jsonrpc/branch/master/graph/badge.svg)](https://codecov.io/gh/sammyne/jsonrpc)
 [![LICENSE](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
