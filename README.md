@@ -6,8 +6,16 @@ This is a fork of [gorilla/rpc].
 [![codecov](https://codecov.io/gh/sammyne/jsonrpc/branch/master/graph/badge.svg)](https://codecov.io/gh/sammyne/jsonrpc)
 [![LICENSE](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
 
-jsonrpc support for JSON-RPC 2.0 Specification.
+## Installation
 
-jsonrpc is a foundation for RPC over HTTP services, providing access to the exported methods of an object through HTTP requests.
+```bash
+go get -u github.com/sammyne/jsonrpc
+```
 
+## Examples
+- [server][server-example]: a server providing API as `HelloService`
+- [client][client-example]: a client request service provided by [server][server-example]
+
+[client-example]: examples/client.go
+[server-example]: examples/server.go
 [gorilla/rpc]: https://pkg.go.dev/github.com/gorilla/rpc/v2
